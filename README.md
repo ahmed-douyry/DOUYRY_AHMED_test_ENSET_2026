@@ -66,6 +66,10 @@ docker compose ps
 
 Ouvrir l'application sur **http://localhost:8080** et Eureka sur **http://localhost:8761**. Les sondes de disponibilité permettent à Compose d'attendre le démarrage des services dépendants.
 
+Une fois la pile démarrée, Docker Desktop affiche le groupe `adria` et les sept conteneurs au statut running : découverte (`8761`), configuration (`8888`), comptes (`8081`), transactions (`8082`), agent IA (`8083`), gateway (`9999`) et frontend (`8080`).
+
+![Conteneurs de la pile Adria démarrés dans Docker Desktop](docs/screenshots/20-docker-conteneurs.jpg)
+
 Variables facultatives à définir dans l'environnement ou dans un fichier `.env` local :
 
 ```dotenv
