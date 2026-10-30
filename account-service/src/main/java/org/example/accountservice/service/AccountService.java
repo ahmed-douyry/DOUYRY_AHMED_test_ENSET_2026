@@ -20,6 +20,10 @@ public class AccountService {
     }
 
     public Account create(String customerReference, String currency, Double balance, AccountStatus status) {
+        return create(UUID.randomUUID(), customerReference, currency, balance, status);
+    }
+
+    public Account create(UUID id, String customerReference, String currency, Double balance, AccountStatus status) {
         if (customerReference == null || customerReference.isBlank()) {
             throw new InvalidAccountOperationException("La référence client est obligatoire.");
         }
@@ -30,7 +34,7 @@ public class AccountService {
         }
 
         Account account = new Account();
-        account.setId(UUID.randomUUID());
+        account.setId(id == null ? UUID.randomUUID() : id);
         account.setCustomerReference(customerReference.trim());
         account.setCurrency(normalizedCurrency);
         account.setBalance(initialBalance);
