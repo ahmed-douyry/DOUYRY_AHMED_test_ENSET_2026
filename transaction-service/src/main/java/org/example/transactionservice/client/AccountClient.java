@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @FeignClient(
         name = "account-service",
-        url = "${bank.account-service.url}",
+        url = "${bank.account-service.url:}",
         fallbackFactory = AccountClientFallbackFactory.class
 )
 public interface AccountClient {

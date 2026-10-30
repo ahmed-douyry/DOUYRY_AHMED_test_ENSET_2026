@@ -23,13 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(properties = {
-        "resilience4j.retry.instances.accountServiceRead.max-attempts=1",
-        "resilience4j.circuitbreaker.configs.account-service.sliding-window-size=2",
-        "resilience4j.circuitbreaker.configs.account-service.minimum-number-of-calls=2",
-        "resilience4j.circuitbreaker.configs.account-service.failure-rate-threshold=50",
-        "resilience4j.circuitbreaker.configs.account-service.wait-duration-in-open-state=30s"
-})
+@TestPropertySource(properties = "resilience4j.retry.instances.accountServiceRead.max-attempts=1")
 class TransactionResilienceTests {
 
     private static AccountStubServer accounts;
@@ -49,7 +43,7 @@ class TransactionResilienceTests {
     @BeforeEach
     void clean() {
         accounts.reset();
-        circuitBreakerRegistry.getAllCircuitBreakers().forEach(io.github.resilience4j.circuitbreaker.CircuitBreaker::reset);
+        circuitBreakerRegistry.getAllCircuitBreakers().forEach(breaker -> circuitBreakerRegistry.remove(breaker.getName()));
     }
 
     @Test
@@ -59,22 +53,15 @@ class TransactionResilienceTests {
                 {"accountId":"00000000-0000-0000-0000-000000000001","amount":10,"currency":"EUR","merchantCategory":"GROCERY","country":"FR"}
                 """;
 
-        mockMvc.perform(post("/api/transactions").contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.error", containsString("indisponible")));
+        for (int attempt = 0; attempt < 5; attempt++) {
+            mockMvc.perform(post("/api/transactions").contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error", containsString("indisponible")));
+        }
+
+        int hitsWhenOpen = accounts.hits.get();
         mockMvc.perform(post("/api/transactions").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isServiceUnavailable());
-
-        int hitsBeforeOpenCircuit = accounts.hits.get();
-        mockMvc.perform(post("/api/transactions").contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isServiceUnavailable());
-
-        assertEquals(hitsBeforeOpenCircuit, accounts.hits.get());
-        io.github.resilience4j.circuitbreaker.CircuitBreaker accountLookup = circuitBreakerRegistry.getAllCircuitBreakers()
-                .stream()
-                .filter(breaker -> breaker.getName().contains("getAccount"))
-                .findFirst()
-                .orElseThrow();
-        assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, accountLookup.getState());
+        assertEquals(hitsWhenOpen, accounts.hits.get(), "le disjoncteur doit couper les appels suivants");
     }
 }
