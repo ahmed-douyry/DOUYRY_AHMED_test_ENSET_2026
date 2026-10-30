@@ -1,0 +1,130 @@
+name: adria
+
+services:
+  discovery-service:
+    image: ghcr.io/ahmed-douyry/testadria-discovery-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: discovery-service
+    environment:
+      SERVER_PORT: "8761"
+    ports:
+      - "8761:8761"
+    networks:
+      - bank
+
+  config-service:
+    image: ghcr.io/ahmed-douyry/testadria-config-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: config-service
+    environment:
+      SERVER_PORT: "8888"
+      SPRING_PROFILES_ACTIVE: native,docker
+    ports:
+      - "8888:8888"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - bank
+
+  account-service:
+    image: ghcr.io/ahmed-douyry/testadria-account-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: account-service
+    environment:
+      SERVER_PORT: "8081"
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8081:8081"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - bank
+
+  transaction-service:
+    image: ghcr.io/ahmed-douyry/testadria-transaction-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: transaction-service
+    environment:
+      SERVER_PORT: "8082"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-service:8888"
+    ports:
+      - "8082:8082"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - bank
+
+  ai-agent-service:
+    image: ghcr.io/ahmed-douyry/testadria-ai-agent-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: ai-agent-service
+    environment:
+      SERVER_PORT: "8083"
+      SPRING_PROFILES_ACTIVE: docker
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:120b-cloud}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8083:8083"
+    depends_on:
+      account-service:
+        condition: service_healthy
+      transaction-service:
+        condition: service_healthy
+    networks:
+      - bank
+
+  gateway-service:
+    image: ghcr.io/ahmed-douyry/testadria-gateway-service:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        MODULE: gateway-service
+    environment:
+      SERVER_PORT: "9999"
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "9999:9999"
+    depends_on:
+      account-service:
+        condition: service_healthy
+      transaction-service:
+        condition: service_healthy
+      ai-agent-service:
+        condition: service_started
+    networks:
+      - bank
+
+  frontend:
+    image: ghcr.io/ahmed-douyry/testadria-frontend:${IMAGE_TAG:-local}
+    build:
+      context: frontend-angular
+    ports:
+      - "8080:80"
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    networks:
+      - bank
+
+networks:
+  bank:
+    name: adria-bank

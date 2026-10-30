@@ -1,0 +1,9 @@
+.git
+.idea
+.vscode
+**/.env
+**/target
+frontend-angular/node_modules
+frontend-angular/dist
+frontend-angular/.angular
+ai-agent-service/src/main/resources/application-secret.properties

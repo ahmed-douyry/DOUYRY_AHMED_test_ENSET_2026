@@ -33,3 +33,4 @@ build/
 .vscode/
 
 ai-agent-service/src/main/resources/application-secret.properties
+.env
