@@ -1,0 +1,85 @@
+<section class="page">
+  <div>
+    <h1>Tableau de bord</h1>
+    <p class="lede">Soldes, comptes et derniers mouvements, lus directement sur les microservices.</p>
+  </div>
+
+  @if (error()) {
+    <p class="banner" role="alert">{{ error() }}</p>
+  }
+
+  <div class="stats">
+    <article class="stat hero">
+      <span>Encours</span>
+      @if (totals().length === 0) {
+        <strong>—</strong>
+      } @else {
+        @for (total of totals(); track total[0]) {
+          <strong>{{ money(total[1], total[0]) }}</strong>
+        }
+      }
+    </article>
+    <article class="stat">
+      <span>Comptes</span>
+      <strong>{{ accounts().length }}</strong>
+    </article>
+    <article class="stat">
+      <span>Actifs</span>
+      <strong>{{ activeCount() }}</strong>
+    </article>
+    <article class="stat">
+      <span>Bloqués</span>
+      <strong>{{ blockedCount() }}</strong>
+    </article>
+  </div>
+
+  <div class="split">
+    <article class="panel">
+      <h2>Derniers mouvements</h2>
+      @if (loading()) {
+        <p class="empty">Chargement des écritures…</p>
+      } @else if (recent().length === 0) {
+        <p class="empty">Aucune transaction pour le moment.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Catégorie</th>
+              <th>Pays</th>
+              <th class="num">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (transaction of recent(); track transaction.id) {
+              <tr>
+                <td>{{ accountName()(transaction.accountId) }}</td>
+                <td>{{ categoryLabel(transaction.merchantCategory) }}<div class="meta">{{ when(transaction.createdAt) }}</div></td>
+                <td>{{ transaction.country }}</td>
+                <td class="num">{{ money(transaction.amount, transaction.currency) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </article>
+    <article class="panel">
+      <h2>Comptes</h2>
+      <div class="cards">
+        @for (account of accounts(); track account.id) {
+          <a class="account-card" routerLink="/comptes">
+            <header>
+              <span class="who">{{ clientName(account.customerReference) }}</span>
+              <span class="chip" [class.blocked]="account.status === 'BLOCKED'">
+                {{ account.status === 'ACTIVE' ? 'Actif' : 'Bloqué' }}
+              </span>
+            </header>
+            <span class="balance">{{ money(account.balance, account.currency) }}</span>
+          </a>
+        } @empty {
+          <p class="empty">Aucun compte ouvert.</p>
+        }
+      </div>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,31 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/">
+      <span class="mark">A</span>
+      <span>
+        <strong>Adria</strong>
+        <small>Banque privée</small>
+      </span>
+    </a>
+    <nav class="nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
+      <a routerLink="/comptes" routerLinkActive="active">Comptes</a>
+      <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+      <a routerLink="/virements" routerLinkActive="active">Virements</a>
+      <a routerLink="/assistant" routerLinkActive="active">Assistant</a>
+    </nav>
+    <div class="sidebar-note">
+      <span>Plafond d'opération</span>
+      <strong>1 000</strong>
+    </div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Agence en ligne</p>
+        <p>{{ today }}</p>
+      </div>
+    </header>
+    <router-outlet />
+  </div>
+</div>

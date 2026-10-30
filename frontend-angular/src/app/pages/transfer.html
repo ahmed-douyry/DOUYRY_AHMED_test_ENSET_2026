@@ -1,0 +1,86 @@
+<section class="page">
+  <div>
+    <h1>Virement</h1>
+    <p class="lede">Le compte source est débité, le compte destinataire est crédité. Les deux écritures portent la même opération.</p>
+  </div>
+
+  @if (error()) {
+    <p class="banner" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="banner ok">{{ notice() }}</p>
+  }
+
+  <div class="split">
+    <article class="panel">
+      @if (loading()) {
+        <p class="empty">Chargement des comptes…</p>
+      } @else {
+        <form (ngSubmit)="submit()">
+          <label>
+            Depuis
+            <select name="source" required [ngModel]="sourceAccountId()" (ngModelChange)="onSource($event)">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ clientName(account.customerReference) }} · {{ money(account.balance, account.currency) }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Vers
+            <select name="destination" required [ngModel]="destinationAccountId()" (ngModelChange)="destinationAccountId.set($event)">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ clientName(account.customerReference) }} · {{ account.currency }}</option>
+              }
+            </select>
+          </label>
+          <div class="form-row">
+            <label>
+              Montant
+              <input name="amount" type="number" min="0.01" step="0.01" required [(ngModel)]="amount" />
+            </label>
+            <label>
+              Devise
+              <select name="currency" [(ngModel)]="currency">
+                <option value="EUR">EUR</option>
+                <option value="MAD">MAD</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Pays
+            <select name="country" [(ngModel)]="country">
+              <option value="MA">Maroc</option>
+              <option value="FR">France</option>
+            </select>
+          </label>
+          <button class="btn" type="submit" [disabled]="busy() || sourceAccountId() === destinationAccountId()">
+            Virer {{ money(amount, currency) }}
+          </button>
+        </form>
+      }
+    </article>
+
+    <article class="panel">
+      <h2>Récapitulatif</h2>
+      @if (source(); as account) {
+        <p><span class="label">Source</span><strong>{{ clientName(account.customerReference) }}</strong></p>
+      }
+      @if (destination(); as account) {
+        <p><span class="label">Destinataire</span><strong>{{ clientName(account.customerReference) }}</strong></p>
+      }
+      @if (sourceAccountId() === destinationAccountId() && sourceAccountId()) {
+        <p class="banner">Choisissez deux comptes différents.</p>
+      }
+      @if (result().length > 0) {
+        <div class="stack">
+          @for (transaction of result(); track transaction.id) {
+            <p class="row">
+              <span>{{ categoryLabel(transaction.merchantCategory) }}</span>
+              <strong>{{ money(transaction.amount, transaction.currency) }}</strong>
+            </p>
+          }
+        </div>
+      }
+    </article>
+  </div>
+</section>

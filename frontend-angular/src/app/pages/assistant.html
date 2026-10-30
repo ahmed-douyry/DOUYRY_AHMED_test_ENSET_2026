@@ -1,0 +1,37 @@
+<section class="page">
+  <div>
+    <h1>Assistant</h1>
+    <p class="lede">Le modèle interroge les serveurs MCP des comptes et des transactions.</p>
+  </div>
+
+  <article class="panel">
+    <div class="thread" #thread>
+      @for (message of messages(); track $index) {
+        <div class="bubble" [class.user]="message.role === 'user'">
+          <p>{{ message.text }}</p>
+        </div>
+      }
+      @if (busy()) {
+        <div class="bubble"><p>Je consulte les services…</p></div>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="banner" role="alert">{{ error() }}</p>
+    }
+
+    <div class="suggestions">
+      @for (suggestion of suggestions; track suggestion) {
+        <button type="button" [disabled]="busy()" (click)="send(suggestion)">{{ suggestion }}</button>
+      }
+    </div>
+
+    <form class="chat-form" (ngSubmit)="send()">
+      <label style="flex: 1">
+        Message
+        <input name="query" [(ngModel)]="query" placeholder="Demandez un solde, un paiement, un virement…" />
+      </label>
+      <button class="btn" type="submit" [disabled]="busy() || !query.trim()">Envoyer</button>
+    </form>
+  </article>
+</section>

@@ -1,0 +1,17 @@
+{
+  "/account": {
+    "target": "http://localhost:9999",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/transaction": {
+    "target": "http://localhost:9999",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/agent": {
+    "target": "http://localhost:9999",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

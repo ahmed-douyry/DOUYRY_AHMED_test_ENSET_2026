@@ -1,0 +1,78 @@
+<section class="page">
+  <div>
+    <h1>Comptes</h1>
+    <p class="lede">Ouverture, consultation, crédit, débit et blocage.</p>
+  </div>
+
+  @if (error()) {
+    <p class="banner" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="banner ok">{{ notice() }}</p>
+  }
+
+  <div class="split">
+    <div class="stack">
+      @if (loading()) {
+        <p class="empty">Chargement des comptes…</p>
+      }
+      @for (account of accounts(); track account.id) {
+        <button class="account-card" [class.selected]="account.id === selectedId()" type="button" (click)="select(account)">
+          <header>
+            <span class="who">{{ clientName(account.customerReference) }}</span>
+            <span class="chip" [class.blocked]="account.status === 'BLOCKED'">
+              {{ account.status === 'ACTIVE' ? 'Actif' : 'Bloqué' }}
+            </span>
+          </header>
+          <span class="balance">{{ money(account.balance, account.currency) }}</span>
+          <p class="meta">{{ account.customerReference }}</p>
+        </button>
+      }
+    </div>
+
+    <div class="page">
+      @if (selected(); as account) {
+        <article class="panel">
+          <h2>{{ clientName(account.customerReference) }}</h2>
+          <p class="id">{{ account.id }}</p>
+          <p class="balance">{{ money(account.balance, account.currency) }}</p>
+          <label>
+            Montant de l'opération
+            <input name="operationAmount" type="number" min="0.01" step="0.01" [(ngModel)]="operationAmount" />
+          </label>
+          <div class="actions">
+            <button class="btn" type="button" [disabled]="busy()" (click)="move('credit')">Créditer</button>
+            <button class="btn secondary" type="button" [disabled]="busy()" (click)="move('debit')">Débiter</button>
+            <button class="btn danger" type="button" [disabled]="busy()" (click)="toggleStatus()">
+              {{ account.status === 'ACTIVE' ? 'Bloquer' : 'Réactiver' }}
+            </button>
+          </div>
+        </article>
+      }
+
+      <article class="panel">
+        <h2>Nouveau compte</h2>
+        <form (ngSubmit)="create()">
+          <label>
+            Référence client
+            <input name="customerReference" required [(ngModel)]="customerReference" placeholder="USER-NADIA" />
+          </label>
+          <div class="form-row">
+            <label>
+              Devise
+              <select name="currency" [(ngModel)]="currency">
+                <option value="EUR">EUR</option>
+                <option value="MAD">MAD</option>
+              </select>
+            </label>
+            <label>
+              Solde initial
+              <input name="balance" type="number" min="0" step="0.01" [(ngModel)]="balance" />
+            </label>
+          </div>
+          <button class="btn" type="submit" [disabled]="busy() || !customerReference.trim()">Ouvrir le compte</button>
+        </form>
+      </article>
+    </div>
+  </div>
+</section>
